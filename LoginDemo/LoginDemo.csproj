@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="fb_icon_325x325.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Domain\" />
+    <Folder Include="Repository\" />
+    <Folder Include="Resources\" />
+    <Folder Include="Presentation\Views\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.28" />
+    <PackageReference Include="RestSharp" Version="106.11.7" />
+    <PackageReference Include="SimpleInjector" Version="5.1.0" />
+  </ItemGroup>
+ 
+
+  <ItemGroup>
+    <Page Include="App.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\fb_icon_325x325.png" />
+  </ItemGroup>
+
+</Project>
