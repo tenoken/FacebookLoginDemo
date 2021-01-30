@@ -1,8 +1,8 @@
-﻿using LoginDemo.Servcices.Interfaces;
+﻿using LoginDemo.Domain.Model;
+using LoginDemo.Domain.Models.Interfaces;
+using LoginDemo.Servcices.Interfaces;
 using RestSharp;
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace LoginDemo.Servcices
@@ -10,9 +10,9 @@ namespace LoginDemo.Servcices
     public class FacebookWebRequest : IRequest
     {
         private IList<RestResponseCookie> _cookieContainer;
-        private DocumentHelper _documentHelper;
+        private IDocumentHelper _documentHelper;
         private bool _isLogged;
-        private LoginData _loginData;
+        private ICredential _credential;
         private string _pageContent;
         private const string _userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0";
         private const string FACEBOOK_BASE_PATH = "https://mbasic.facebook.com/";
@@ -20,25 +20,25 @@ namespace LoginDemo.Servcices
         private const string DO_NOT_SAVE_LOGIN_PATH = "https://mbasic.facebook.com/logout.php?h=AfcWU37xLCs5fd-zTXA&amp;t=1610912815&amp;button_name=logout&amp;button_location=mbasic_save_pw_interstitial";
         private const string LOGOUT_PATH = "https://mbasic.facebook.com/login/save-password-interstitial/?ref_component=mbasic_footer&amp;ref_page=%2Fwap%2Fhome.php&amp;refid=8";
 
-        public FacebookWebRequest()
+        public FacebookWebRequest(IDocumentHelper documentHelper, IList<RestResponseCookie> responseCookies, ICredential credential)
         {
-            _documentHelper = new DocumentHelper();
-            _cookieContainer = new List<RestResponseCookie>();
+            _documentHelper = documentHelper;
+            _cookieContainer = responseCookies;
+            _credential = credential;
             _pageContent = "";
-            _loginData = new LoginData();
         }
 
         public async Task<string> GetHomePage(string user, string password)
         {
             if (!_isLogged)
             {
-                _loginData.LoginDataBuilder(user, password);
+                _credential.CredentialBuilder(user, password);
                 _pageContent = await Login();
             }
 
             _pageContent = await Get(FACEBOOK_BASE_PATH);
-
-            _pageContent = await Logout();
+            //Uncomment the line below to do logout
+            //_pageContent = await Logout();
 
             return _pageContent;
         }
@@ -54,7 +54,7 @@ namespace LoginDemo.Servcices
         {
             if (!_isLogged)
                 return "";
-
+            //TODO: get logout path dynamically
             _pageContent = await Get(LOGOUT_PATH);
             _pageContent = await Post(DO_NOT_SAVE_LOGIN_PATH, _pageContent, ActionParams.Logout);
             ClearCookies();
@@ -126,8 +126,8 @@ namespace LoginDemo.Servcices
 
         private void AddLoginDataParameter(RestRequest request)
         {
-            request.AddParameter("email", _loginData.User);
-            request.AddParameter("pass", _loginData.Password);
+            request.AddParameter("email", _credential.GetUser());
+            request.AddParameter("pass", _credential.GetPassword());
         }
 
         private void SetHeadersCookies(IList<RestResponseCookie> cookies)
@@ -136,33 +136,10 @@ namespace LoginDemo.Servcices
                 _cookieContainer.Add(cookie);
         }
 
-        //TODO: extract this class out
-        private class LoginData
-        {
-            private string _user;
-            private string _password;
-
-            public LoginData()
-            {              
-            }
-
-            internal void LoginDataBuilder(string user, string password)
-            {
-                _user = user;
-                _password = password;
-            }
-
-            public string Password { get => _password;}
-            public string User { get => _user;}
-        }
-
         public enum ActionParams
         {
-            //[Description("Action for default post request")]
             Default,
-            //[Description("Get the parameters from body to perform post request in order to login")]
             Login,         
-            //[Description("Get the parameters from body to perform post request in order to logout")]
             Logout
         }
     }

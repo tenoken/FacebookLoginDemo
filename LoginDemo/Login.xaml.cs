@@ -1,18 +1,5 @@
 ﻿using LoginDemo.Servcices;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace LoginDemo
 {
@@ -23,31 +10,34 @@ namespace LoginDemo
     {
         static private IWebScrapingService _webScrapingService;
 
-        public Login()
+        public Login(IWebScrapingService webScrapingService)
         {
             InitializeComponent();
-            _webScrapingService = new WebScrapingService();
+            _webScrapingService = webScrapingService;
         }
 
         private void DoLogin(object sender, RoutedEventArgs e)
         {
             //TODO: sanatize and verefy inputed strings
-            //validation and sanatize stuff right here            
+            //validation and sanatize stuff right here       
 
-            if (string.IsNullOrEmpty(userPasswordBox.Password) || string.IsNullOrEmpty(userTextBox.Text))
-            {
-                MessageBox.Show("Fill all the fields!", "", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            }
+            if (!IsInputsFilled())
+               return;
 
-            _webScrapingService.Navigate(userTextBox.Text, userPasswordBox.Password);
-            //GoToHomeWindow();
+            var homePageDocument = _webScrapingService.GetHomePageDocument(userTextBox.Text, userPasswordBox.Password);
+
+            MessageBox.Show("The application successfully logged into facebook.", "Login Info", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void GoToHomeWindow()
+        private bool IsInputsFilled()
         {
-            var homeWindow = new Home();
-            homeWindow.Show();
-            this.Close();
+            if (string.IsNullOrEmpty(userPasswordBox.Password) || string.IsNullOrEmpty(userTextBox.Text))
+            {
+                MessageBox.Show("It is necessary fill all fields!", "Validation Issues", MessageBoxButton.OK, MessageBoxImage.Information);
+                return false;
+            }
+
+            return true;
         }
     }
 }

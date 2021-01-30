@@ -15,14 +15,15 @@ namespace LoginDemo.Servcices
     {
         private IRequest _request;
 
-        public WebScrapingService()
+        public WebScrapingService(IRequest request)
         {
-            _request = new FacebookWebRequest();
+            _request = request;
         }
 
-        public void Navigate(string user, string password)
+        public async Task<string> GetHomePageDocument(string user, string password)
         {
-           _request.GetHomePage(user, password).GetAwaiter().GetResult();
+            var pageHTMLDocument = await _request.GetHomePage(user, password);
+            return pageHTMLDocument;
         }
     }
 }

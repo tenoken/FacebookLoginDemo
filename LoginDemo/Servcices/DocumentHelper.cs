@@ -19,11 +19,11 @@ namespace LoginDemo.Servcices
         public Tuple<string[], string[]> GetParams(string pageContent, FacebookWebRequest.ActionParams action)
         {
             var parameters = new Tuple<string[], string[]>(new string[0], new string[0]);
-
+            //TODO: find a better way to call the rith method
             switch (action)
             {
                 case FacebookWebRequest.ActionParams.Default:
-                    //Do nothing
+                    return parameters;
                     break;
                 case FacebookWebRequest.ActionParams.Login:
                     parameters = GetLoginParams(pageContent);
@@ -32,8 +32,7 @@ namespace LoginDemo.Servcices
                     parameters = GetLogoutParams(pageContent);
                     break;
                 default:
-                    //Do nothing
-                    break;
+                    throw new NotImplementedException($"There is no a specialized parameters to referenced action: {action}");
             }
 
             return parameters;
