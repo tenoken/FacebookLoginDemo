@@ -1,12 +1,10 @@
-﻿using HtmlAgilityPack;
-using System;
+﻿using LoginDemo.Domain.Model;
 using System.Collections.Generic;
-using System.Text;
 
 namespace LoginDemo.Servcices.Interfaces
 {
     public interface IDocumentHelper
     {
-        Tuple<string[], string[]> GetParams(string pageContent, FacebookWebRequest.ActionParams actionParams);
+        Dictionary<string, string> GetParams(string pageContent, ActionParams actionParams, Credential credential);
     }
 }

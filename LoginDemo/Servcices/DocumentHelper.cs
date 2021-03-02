@@ -1,6 +1,9 @@
 ﻿using HtmlAgilityPack;
+using LoginDemo.Domain.Model;
+using LoginDemo.Domain.Models.Interfaces;
 using LoginDemo.Servcices.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LoginDemo.Servcices
@@ -8,39 +11,38 @@ namespace LoginDemo.Servcices
     public class DocumentHelper : IDocumentHelper
     {
         private HtmlDocument _htmlDocument;
-        private const string LOGIN_FORM = "/html[1]/body[1]/div[1]/div[1]/div[2]/div[1]/table[1]/tbody[1]/tr[1]/td[1]/div[2]/div[2]/form[1]";
+        private const string LOGIN_FORM = "//form[1]";
         private const string DO_NOT_SAVE_FORM = "//form[2]";
+        private Dictionary<string, string> _dictionary;
 
         public DocumentHelper()
         {
             _htmlDocument = new HtmlDocument();
+            _dictionary = new Dictionary<string, string>();
         }
 
-        public Tuple<string[], string[]> GetParams(string pageContent, FacebookWebRequest.ActionParams action)
+        public Dictionary<string, string> GetParams(string pageContent, ActionParams action, Credential credential)
         {
-            var parameters = new Tuple<string[], string[]>(new string[0], new string[0]);
-            //TODO: find a better way to call the rith method
+            //TODO: create a specific document helper for all actions
             switch (action)
             {
-                case FacebookWebRequest.ActionParams.Default:
-                    return parameters;
+                case ActionParams.Default:
+                    return _dictionary;
+                case ActionParams.Login:
+                    _dictionary = GetLoginParams(pageContent, credential);
                     break;
-                case FacebookWebRequest.ActionParams.Login:
-                    parameters = GetLoginParams(pageContent);
-                    break;
-                case FacebookWebRequest.ActionParams.Logout:
-                    parameters = GetLogoutParams(pageContent);
+                case ActionParams.Logout:
+                    _dictionary = GetLogoutParams(pageContent);
                     break;
                 default:
                     throw new NotImplementedException($"There is no a specialized parameters to referenced action: {action}");
             }
 
-            return parameters;
+            return _dictionary;
         }
 
-        private Tuple<string[], string[]> GetLoginParams(string pageContent)
+        private Dictionary<string, string> GetLoginParams(string pageContent, Credential credential)
         {
-            //Hidden Form Iputs
             _htmlDocument.LoadHtml(pageContent);
 
             var formNode = _htmlDocument.DocumentNode.SelectNodes(LOGIN_FORM).First();
@@ -61,10 +63,12 @@ namespace LoginDemo.Servcices
             names.Add("login");
             values.Add("Entrar");
 
-            return new Tuple<string[], string[]>(names.ToArray(),values.ToArray());
+            SafeAdd(names, values);
+            AddLoginDataParameter(credential);
+            return _dictionary;
         }
 
-        private Tuple<string[], string[]> GetLogoutParams(string pageContent)
+        private Dictionary<string, string> GetLogoutParams(string pageContent)
         {
             _htmlDocument.LoadHtml(pageContent);
 
@@ -78,7 +82,30 @@ namespace LoginDemo.Servcices
             names.RemoveAt(2);
             values.RemoveAt(2);
 
-            return new Tuple<string[], string[]>(names.ToArray(), values.ToArray());
+            SafeAdd(names, values);
+            return _dictionary;
+        }
+
+        private void AddLoginDataParameter(Credential credential)
+        {
+            SafeAdd("email", credential.GetUser());
+            SafeAdd("pass", credential.GetPassword());
+        }
+
+        private void SafeAdd(IList<string> keys, IList<string> values)
+        {
+
+            for (int i = 0; i < keys.Count; i++)
+            {
+                if (_dictionary.Where(x => x.Key == keys[i]).Count() == 0)
+                    _dictionary.Add(keys[i],values[i]);
+            }            
+        }
+
+        private void SafeAdd(string key, string value)
+        {
+            if (_dictionary.Where(x => x.Key == key).Count() == 0)
+                _dictionary.Add(key, value);
         }
     }
 }
